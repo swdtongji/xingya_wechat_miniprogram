@@ -49,7 +49,7 @@
     "disableSWC": true
   },
   "compileType": "miniprogram",
-  "libVersion": "3.0.0",
+  "libVersion": "3.15.2",
   "appid": "wx1ffe6e1a85eb3d29",
   "projectname": "xingya_ble_input",
   "isGameTourist": false,
