@@ -1,0 +1,22 @@
+{
+  "pages": [
+    "pages/index/index"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#1a1a2e",
+    "navigationBarTitleText": "星芽 BLE 输入",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#0f0f1e"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "permission": {
+    "scope.bluetooth": {
+      "desc": "用于连接 ESP32 设备并发送文本"
+    },
+    "scope.userLocation": {
+      "desc": "Android 扫描 BLE 设备需要定位权限"
+    }
+  }
+}

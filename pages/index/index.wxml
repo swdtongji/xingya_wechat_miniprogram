@@ -1,0 +1,138 @@
+<!-- pages/index/index.wxml -->
+<view class="page">
+
+  <!-- 状态条 -->
+  <view class="status-bar">
+    <view class="status-dot {{connected ? 'dot-on' : (scanning ? 'dot-scan' : 'dot-off')}}"></view>
+    <text>{{ statusText }}</text>
+  </view>
+
+  <!-- 未连接时：扫描 + 设备列表 -->
+  <block wx:if="{{!connected}}">
+    <view class="card">
+      <view class="card-title">选择设备</view>
+      <view class="muted" wx:if="{{devices.length === 0 && !scanning}}">
+        点击下方「开始扫描」，查找名称以 xingya_ 开头的设备
+      </view>
+      <view class="muted" wx:if="{{devices.length === 0 && scanning}}">
+        正在扫描附近的 BLE 设备...
+      </view>
+
+      <view class="dev-list">
+        <view
+          class="dev-item {{item.isTarget ? 'dev-target' : ''}}"
+          wx:for="{{devices}}"
+          wx:key="deviceId"
+          bindtap="onTapDevice"
+          data-id="{{item.deviceId}}"
+        >
+          <view class="dev-name">
+            <text wx:if="{{item.isTarget}}" class="tag-target">★ 目标</text>
+            {{item.name}}
+          </view>
+          <view class="dev-meta muted">信号 {{item.rssi}} dBm</view>
+        </view>
+      </view>
+
+      <view class="muted tip" wx:if="{{devices.length > 0}}">
+        共扫到 {{devices.length}} 个设备（调试模式：全展示）
+      </view>
+
+      <view class="row">
+        <view
+          class="btn btn-primary flex1"
+          bindtap="onTapScan"
+          wx:if="{{!scanning}}"
+        >开始扫描</view>
+        <view
+          class="btn btn-danger flex1"
+          bindtap="onTapStopScan"
+          wx:if="{{scanning}}"
+        >停止扫描</view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 已连接时：文本输入 + 发送 -->
+  <block wx:if="{{connected}}">
+    <view class="card">
+      <view class="card-title">输入文本</view>
+      <view class="muted mb-10">支持中文，单次最多约 80 汉字 (240 字节 UTF-8)</view>
+      <textarea
+        class="input-area"
+        placeholder="在这里输入要发送给 ESP32 的文本…"
+        value="{{text}}"
+        bindinput="onTextInput"
+        auto-height
+        maxlength="200"
+        confirm-type="send"
+        confirm-hold
+      ></textarea>
+      <view class="muted tip">
+        字符数: {{text.length}}  ·  UTF-8 字节: {{byteLen}}
+      </view>
+
+      <view class="row">
+        <view
+          class="btn btn-primary flex1"
+          bindtap="onTapSend"
+          wx:if="{{!sending}}"
+        >发送</view>
+        <view
+          class="btn flex1"
+          wx:else
+        >发送中…</view>
+      </view>
+
+      <view class="row">
+        <view class="btn flex1" bindtap="onTapClear">清空</view>
+        <view class="btn btn-danger flex1" bindtap="onTapDisconnect">断开连接</view>
+      </view>
+    </view>
+
+    <!-- 预设快捷文本（兑换码等） -->
+    <view class="card">
+      <view class="card-title">快捷发送</view>
+      <view class="preset-list">
+        <view
+          class="preset-item"
+          wx:for="{{presets}}"
+          wx:key="*this"
+          bindtap="onTapPreset"
+          data-val="{{item}}"
+        >{{item}}</view>
+      </view>
+    </view>
+
+    <!-- 历史 -->
+    <view class="card" wx:if="{{history.length > 0}}">
+      <view class="card-title-row">
+        <view class="card-title">发送历史</view>
+        <view class="mini-btn" bindtap="onTapClearHistory">清除</view>
+      </view>
+      <view
+        class="hist-item"
+        wx:for="{{history}}"
+        wx:key="ts"
+        bindtap="onTapHistory"
+        data-val="{{item.text}}"
+      >
+        <view class="hist-text">{{item.text}}</view>
+        <view class="hist-meta muted">{{item.time}}  ·  {{item.bytes}}B</view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 日志区 -->
+  <view class="card log-card">
+    <view class="card-title-row">
+      <view class="card-title">日志</view>
+      <view class="mini-btn" bindtap="onTapClearLog">清除</view>
+    </view>
+    <view class="log-item {{item.level}}" wx:for="{{logs}}" wx:key="ts">
+      <text class="muted">[{{item.time}}]</text> {{item.msg}}
+    </view>
+    <view class="muted" wx:if="{{logs.length === 0}}">暂无日志</view>
+  </view>
+
+</view>

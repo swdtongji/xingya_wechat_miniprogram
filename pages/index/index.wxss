@@ -1,0 +1,129 @@
+/* pages/index/index.wxss */
+.page { padding: 20rpx; padding-bottom: 40rpx; }
+
+.status-bar {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 24rpx;
+  background: #1a1a2e;
+  border-radius: 12rpx;
+  font-size: 26rpx;
+}
+.status-dot {
+  width: 16rpx; height: 16rpx; border-radius: 50%;
+  margin-right: 16rpx;
+  background: #555;
+}
+.dot-on   { background: #4ade80; box-shadow: 0 0 8rpx #4ade80; }
+.dot-off  { background: #ff6b7a; }
+.dot-scan { background: #fbbf24; animation: blink 1s infinite; }
+@keyframes blink { 50% { opacity: 0.3; } }
+
+.card-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  margin-bottom: 16rpx;
+  color: #e4e4f0;
+}
+.card-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+.mini-btn {
+  font-size: 24rpx;
+  color: #888ab0;
+  padding: 4rpx 16rpx;
+  border: 1rpx solid #3a3a55;
+  border-radius: 8rpx;
+}
+
+.row {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 16rpx;
+}
+.flex1 { flex: 1; }
+
+.mb-10 { margin-bottom: 10rpx; }
+
+/* 设备列表 */
+.dev-list { margin-top: 12rpx; }
+.dev-item {
+  padding: 20rpx;
+  border: 1rpx solid #2a2a44;
+  border-radius: 12rpx;
+  margin-bottom: 12rpx;
+  background: #14142a;
+  transition: all .15s;
+}
+.dev-item:active { background: #2a2a44; }
+.dev-item.dev-target {
+  background: #1e3a2e;
+  border-color: #4ade80;
+  box-shadow: 0 0 20rpx rgba(74, 222, 128, 0.3);
+}
+.tag-target {
+  display: inline-block;
+  padding: 4rpx 12rpx;
+  background: #4ade80;
+  color: #0f0f1e;
+  font-size: 20rpx;
+  font-weight: 700;
+  border-radius: 6rpx;
+  margin-right: 12rpx;
+}
+.dev-name { font-size: 30rpx; font-weight: 500; }
+.dev-meta { font-size: 22rpx; margin-top: 6rpx; }
+
+/* 输入框 */
+.input-area {
+  width: 100%;
+  min-height: 180rpx;
+  padding: 20rpx;
+  box-sizing: border-box;
+  background: #0f0f1e;
+  border: 1rpx solid #2a2a44;
+  border-radius: 12rpx;
+  color: #fff;
+  font-size: 30rpx;
+  line-height: 1.5;
+}
+.tip { font-size: 22rpx; margin-top: 10rpx; }
+
+/* 快捷按钮 */
+.preset-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+.preset-item {
+  padding: 12rpx 20rpx;
+  background: #2a2a44;
+  border: 1rpx solid #3a3a55;
+  border-radius: 8rpx;
+  font-size: 24rpx;
+  font-family: "Courier New", monospace;
+}
+
+/* 历史记录 */
+.hist-item {
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #2a2a44;
+}
+.hist-item:last-child { border-bottom: 0; }
+.hist-text { font-size: 28rpx; word-break: break-all; }
+.hist-meta { font-size: 22rpx; margin-top: 6rpx; }
+
+/* 日志 */
+.log-card { max-height: 500rpx; overflow: hidden; }
+.log-item {
+  font-size: 22rpx;
+  line-height: 1.6;
+  word-break: break-all;
+  font-family: "Courier New", monospace;
+}
+.log-item.info  { color: #e4e4f0; }
+.log-item.warn  { color: #fbbf24; }
+.log-item.error { color: #ff6b7a; }
