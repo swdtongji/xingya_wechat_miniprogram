@@ -158,8 +158,34 @@ class BLEClient {
     this.debugLog = null;      // (msg) => void, 用于显示到 UI
   }
 
+  // 检查并申请蓝牙/定位权限
+  async _checkAndRequestPermissions() {
+    const setting = await wxPromise(wx.getSetting);
+    const auth = setting.authSetting || {};
+
+    const needBluetooth = !auth['scope.bluetooth'];
+    const needLocation = !auth['scope.userLocation'];
+
+    if (needBluetooth) {
+      try {
+        await wxPromise(wx.authorize, { scope: 'scope.bluetooth' });
+      } catch (e) {
+        throw { errCode: 10001, errMsg: '蓝牙权限未授权，请在设置中开启蓝牙权限', needOpenSetting: true };
+      }
+    }
+
+    if (needLocation) {
+      try {
+        await wxPromise(wx.authorize, { scope: 'scope.userLocation' });
+      } catch (e) {
+        throw { errCode: 10001, errMsg: '定位权限未授权，Android 扫描 BLE 需要定位权限', needOpenSetting: true };
+      }
+    }
+  }
+
   // 打开蓝牙 + 注册全局监听（只注册一次）
   async init() {
+    await this._checkAndRequestPermissions();
     await wxPromise(wx.openBluetoothAdapter);
     if (!this._listenerBound) {
       wx.onBluetoothDeviceFound((res) => {

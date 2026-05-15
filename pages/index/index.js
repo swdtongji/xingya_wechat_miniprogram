@@ -44,11 +44,24 @@ Page({
       this.log('蓝牙模块已就绪', 'info');
     }).catch((e) => {
       this.log('蓝牙初始化失败: ' + (e.errMsg || JSON.stringify(e)), 'error');
-      wx.showModal({
-        title: '蓝牙不可用',
-        content: '请检查：\n1. 手机蓝牙已打开\n2. Android: 已授权定位权限\n3. iOS: 已授权蓝牙权限',
-        showCancel: false
-      });
+      if (e.needOpenSetting) {
+        wx.showModal({
+          title: '权限未授权',
+          content: e.errMsg || '请在设置中开启相关权限',
+          confirmText: '去设置',
+          success: (res) => {
+            if (res.confirm) {
+              wx.openSetting();
+            }
+          }
+        });
+      } else {
+        wx.showModal({
+          title: '蓝牙不可用',
+          content: '请检查：\n1. 手机蓝牙已打开\n2. Android: 已授权定位权限\n3. iOS: 已授权蓝牙权限',
+          showCancel: false
+        });
+      }
     });
 
     // 调试：把广播包原始 hex 打到日志区

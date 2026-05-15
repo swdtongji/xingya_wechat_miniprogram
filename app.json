@@ -18,5 +18,6 @@
     "scope.userLocation": {
       "desc": "Android 扫描 BLE 设备需要定位权限"
     }
-  }
+  },
+  "requiredBackgroundModes": ["bluetooth"]
 }
