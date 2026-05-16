@@ -19,6 +19,20 @@
 .dot-scan { background: #fbbf24; animation: blink 1s infinite; }
 @keyframes blink { 50% { opacity: 0.3; } }
 
+/* 未授权警告条 */
+.perm-banner {
+  margin-top: 16rpx;
+  padding: 20rpx 24rpx;
+  background: #3a1a1a;
+  border: 1rpx solid #ff6b7a;
+  border-radius: 12rpx;
+  color: #ff6b7a;
+  font-size: 26rpx;
+  text-align: center;
+  animation: blink 1.5s infinite;
+}
+.perm-banner:active { background: #4a2222; }
+
 .card-title {
   font-size: 32rpx;
   font-weight: 600;

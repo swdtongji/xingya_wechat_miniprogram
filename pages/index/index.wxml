@@ -7,6 +7,11 @@
     <text>{{ statusText }}</text>
   </view>
 
+  <!-- BLE 未就绪警告条：点击直接走权限申请流程 -->
+  <view class="perm-banner" wx:if="{{!bleReady && !connected}}" bindtap="onTapRequestPerm">
+    ⚠️ 蓝牙未就绪，点此授权【蓝牙+定位】
+  </view>
+
   <!-- 未连接时：扫描 + 设备列表 -->
   <block wx:if="{{!connected}}">
     <view class="card">
@@ -49,6 +54,10 @@
           bindtap="onTapStopScan"
           wx:if="{{scanning}}"
         >停止扫描</view>
+      </view>
+
+      <view class="row">
+        <view class="btn flex1" bindtap="onTapRequestPerm">申请权限 / 重试初始化</view>
       </view>
     </view>
   </block>

@@ -15,6 +15,7 @@ Page({
     scanning: false,
     connected: false,
     statusText: '未连接',
+    bleReady: false,        // 蓝牙初始化是否成功（控制顶部警告条显示）
     devices: [],
 
     text: '',
@@ -80,43 +81,46 @@ Page({
   // BLE 初始化（失败给出可重试的弹框）
   _tryInit() {
     ble.init().then(() => {
+      this.setData({ bleReady: true });
       this.log('蓝牙模块已就绪', 'info');
     }).catch((e) => {
+      this.setData({ bleReady: false });
       const errMsg = e.errMsg || JSON.stringify(e);
       const errCode = e.errCode != null ? e.errCode : (e.code != null ? e.code : '');
       this.log('蓝牙初始化失败: ' + errMsg, 'error');
 
-      if (e.needOpenSetting) {
-        wx.showModal({
-          title: '权限未授权',
-          content: errMsg || '请在设置中开启相关权限',
-          confirmText: '去设置',
-          cancelText: '稍后',
-          success: (res) => {
-            if (res.confirm) wx.openSetting();
-          }
-        });
-        return;
-      }
+      // 避免重复弹框：如果已经有弹框在显，不再弹
+      if (this._modalShowing) return;
+      this._modalShowing = true;
 
-      // openBluetoothAdapter 失败：通常是手机蓝牙没打开 / 模拟器 / iOS 微信没系统蓝牙权限
-      // 小程序无法主动弹「打开蓝牙」的系统框，只能提示用户手动开启
+      const tip = e.needOpenSetting
+        ? '权限未授权：' + errMsg
+        : '错误码: ' + errCode + '\n错误信息: ' + errMsg + '\n\n' +
+          '可能原因：\n' +
+          '① 手机蓝牙未打开\n' +
+          '② 微信未授权蓝牙/定位\n' +
+          '③ 必须真机预览';
+
       wx.showModal({
-        title: '蓝牙未开启',
-        content: '错误码: ' + errCode + '\n' +
-          '错误信息: ' + errMsg + '\n\n' +
-          '排查项:\n' +
-          '① 手机蓝牙开关是否已打开\n' +
-          '② Android 是否授予定位权限\n' +
-          '③ iOS 系统设置→微信→蓝牙 开关\n' +
-          '④ 必须真机预览（模拟器不支持）',
-        confirmText: '重试',
-        cancelText: '取消',
+        title: '需要授权',
+        content: tip,
+        confirmText: '去授权',
+        cancelText: '稍后',
         success: (res) => {
-          if (res.confirm) this._tryInit();
-        }
+          this._modalShowing = false;
+          if (res.confirm) this.onTapRequestPerm();
+        },
+        fail: () => { this._modalShowing = false; }
       });
     });
+  },
+
+  onShow() {
+    // 从设置页/后台返回时如果 BLE 还没就绪，重试一次
+    if (!this.data.bleReady && !this._modalShowing) {
+      this.log('onShow: BLE 未就绪，重试初始化', 'warn');
+      this._tryInit();
+    }
   },
 
   onUnload() {
@@ -124,6 +128,65 @@ Page({
     ble.disconnect().finally(() => {
       try { wx.closeBluetoothAdapter(); } catch (e) {}
     });
+  },
+
+  // --------------- 权限 ---------------
+  // 手动申请权限 / 重试 BLE 初始化
+  // 点击后会依次尝试：
+  //   1. 查询当前 authSetting 打到日志
+  //   2. 主动 wx.authorize 请求蓝牙/定位两个 scope（首次会弹系统授权框）
+  //   3. 被拒过的话跳 wx.openSetting 让用户手动打开
+  //   4. 返回后重新 _tryInit
+  async onTapRequestPerm() {
+    this.log('=== 手动申请权限 ===', 'info');
+    try {
+      const setting = await new Promise((res, rej) => wx.getSetting({ success: res, fail: rej }));
+      const a = setting.authSetting || {};
+      this.log('当前授权: bluetooth=' + a['scope.bluetooth'] + ' userLocation=' + a['scope.userLocation'], 'info');
+    } catch (e) {
+      this.log('getSetting 失败: ' + (e && e.errMsg), 'error');
+    }
+
+    // 依次主动请求两个 scope
+    const scopes = [
+      { key: 'scope.bluetooth',    label: '蓝牙' },
+      { key: 'scope.userLocation', label: '定位（Android 扫描必须）' }
+    ];
+    let needOpenSetting = false;
+    for (const s of scopes) {
+      try {
+        await new Promise((res, rej) => wx.authorize({ scope: s.key, success: res, fail: rej }));
+        this.log(s.label + ' 授权成功', 'info');
+      } catch (e) {
+        const msg = (e && e.errMsg) || '';
+        this.log(s.label + ' 授权失败: ' + msg, 'warn');
+        // errMsg 包含 auth deny 表示用户拒绝过，后续必须走 openSetting
+        if (msg.indexOf('deny') !== -1 || msg.indexOf('disable') !== -1) {
+          needOpenSetting = true;
+        }
+      }
+    }
+
+    if (needOpenSetting) {
+      const ok = await new Promise((res) => {
+        wx.showModal({
+          title: '权限被拒绝',
+          content: '请在设置页手动打开「蓝牙」和「位置信息」权限。',
+          confirmText: '去设置',
+          cancelText: '取消',
+          success: (r) => res(r.confirm)
+        });
+      });
+      if (ok) {
+        const r = await new Promise((res) => wx.openSetting({ success: res, fail: () => res(null) }));
+        if (r && r.authSetting) {
+          this.log('设置页返回: bluetooth=' + r.authSetting['scope.bluetooth'] + ' userLocation=' + r.authSetting['scope.userLocation'], 'info');
+        }
+      }
+    }
+
+    // 手动重新初始化 BLE
+    this._tryInit();
   },
 
   // --------------- 扫描 ---------------
