@@ -39,33 +39,21 @@ Page({
     const his = wx.getStorageSync(LS_HISTORY) || [];
     this.setData({ history: his });
 
-    // BLE 初始化（失败也让用户看到日志）
-    ble.init().then(() => {
-      this.log('蓝牙模块已就绪', 'info');
-    }).catch((e) => {
-      this.log('蓝牙初始化失败: ' + (e.errMsg || JSON.stringify(e)), 'error');
-      if (e.needOpenSetting) {
-        wx.showModal({
-          title: '权限未授权',
-          content: e.errMsg || '请在设置中开启相关权限',
-          confirmText: '去设置',
-          success: (res) => {
-            if (res.confirm) {
-              wx.openSetting();
-            }
-          }
-        });
-      } else {
-        wx.showModal({
-          title: '蓝牙不可用',
-          content: '请检查：\n1. 手机蓝牙已打开\n2. Android: 已授权定位权限\n3. iOS: 已授权蓝牙权限',
-          showCancel: false
-        });
+    // 调试：把广播包原始 hex 打到日志区
+    ble.debugLog = (msg) => this.log(msg, 'warn');
+
+    // 监听系统蓝牙开关状态：用户手动打开蓝牙后自动重试 init
+    this._adapterListenerBound = true;
+    wx.onBluetoothAdapterStateChange((res) => {
+      this.log('蓝牙开关状态变化: available=' + res.available + ' discovering=' + res.discovering, 'warn');
+      if (res.available && !ble._listenerBound) {
+        this.log('检测到蓝牙已打开，自动重新初始化...', 'info');
+        this._tryInit();
       }
     });
 
-    // 调试：把广播包原始 hex 打到日志区
-    ble.debugLog = (msg) => this.log(msg, 'warn');
+    // 首次初始化
+    this._tryInit();
 
     // 注册设备发现回调
     ble.onDeviceFound = (d) => {
@@ -87,6 +75,48 @@ Page({
         statusText: '未连接'
       });
     };
+  },
+
+  // BLE 初始化（失败给出可重试的弹框）
+  _tryInit() {
+    ble.init().then(() => {
+      this.log('蓝牙模块已就绪', 'info');
+    }).catch((e) => {
+      const errMsg = e.errMsg || JSON.stringify(e);
+      const errCode = e.errCode != null ? e.errCode : (e.code != null ? e.code : '');
+      this.log('蓝牙初始化失败: ' + errMsg, 'error');
+
+      if (e.needOpenSetting) {
+        wx.showModal({
+          title: '权限未授权',
+          content: errMsg || '请在设置中开启相关权限',
+          confirmText: '去设置',
+          cancelText: '稍后',
+          success: (res) => {
+            if (res.confirm) wx.openSetting();
+          }
+        });
+        return;
+      }
+
+      // openBluetoothAdapter 失败：通常是手机蓝牙没打开 / 模拟器 / iOS 微信没系统蓝牙权限
+      // 小程序无法主动弹「打开蓝牙」的系统框，只能提示用户手动开启
+      wx.showModal({
+        title: '蓝牙未开启',
+        content: '错误码: ' + errCode + '\n' +
+          '错误信息: ' + errMsg + '\n\n' +
+          '排查项:\n' +
+          '① 手机蓝牙开关是否已打开\n' +
+          '② Android 是否授予定位权限\n' +
+          '③ iOS 系统设置→微信→蓝牙 开关\n' +
+          '④ 必须真机预览（模拟器不支持）',
+        confirmText: '重试',
+        cancelText: '取消',
+        success: (res) => {
+          if (res.confirm) this._tryInit();
+        }
+      });
+    });
   },
 
   onUnload() {

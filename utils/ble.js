@@ -167,10 +167,12 @@ class BLEClient {
     const needLocation = !auth['scope.userLocation'];
 
     if (needBluetooth) {
+      // scope.bluetooth 在老版本微信不存在 / 静默失败属正常，不阻断后续流程
+      // 真正的蓝牙能力由 openBluetoothAdapter 决定，授权失败这里直接跳过
       try {
         await wxPromise(wx.authorize, { scope: 'scope.bluetooth' });
       } catch (e) {
-        throw { errCode: 10001, errMsg: '蓝牙权限未授权，请在设置中开启蓝牙权限', needOpenSetting: true };
+        if (this.debugLog) this.debugLog('scope.bluetooth 授权跳过: ' + (e && e.errMsg));
       }
     }
 
