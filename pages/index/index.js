@@ -32,7 +32,9 @@ Page({
 
     history: [],
 
-    logs: []
+    logs: [],
+    showPrivacy: false,
+    showOpenSetting: false   // 是否显示「去设置」按钮（open-type="openSetting"）
   },
 
   onLoad() {
@@ -53,8 +55,18 @@ Page({
       }
     });
 
-    // 首次初始化
-    this._tryInit();
+    // 注册隐私弹窗回调：当 app 层触发 onNeedPrivacyAuthorization 时显示弹窗
+    getApp()._onNeedPrivacy = () => {
+      this.setData({ showPrivacy: true });
+    };
+
+    // 检查隐私协议状态：已同意则直接初始化，否则等弹窗
+    if (getApp().globalData.privacyAgreed) {
+      this._tryInit();
+    } else {
+      // 等待用户同意隐私协议后再初始化
+      this.log('等待用户同意隐私协议...', 'warn');
+    }
 
     // 注册设备发现回调
     ble.onDeviceFound = (d) => {
@@ -76,6 +88,15 @@ Page({
         statusText: '未连接'
       });
     };
+  },
+
+  // 隐私协议同意回调
+  onPrivacyAgree() {
+    this.setData({ showPrivacy: false });
+    getApp().agreePrivacy();
+    this.log('用户已同意隐私协议', 'info');
+    // 同意后开始 BLE 初始化
+    this._tryInit();
   },
 
   // BLE 初始化（失败给出可重试的弹框）
@@ -135,7 +156,7 @@ Page({
   // 点击后会依次尝试：
   //   1. 查询当前 authSetting 打到日志
   //   2. 主动 wx.authorize 请求蓝牙/定位两个 scope（首次会弹系统授权框）
-  //   3. 被拒过的话跳 wx.openSetting 让用户手动打开
+  //   3. 任何失败都显示「去设置」按钮（open-type="openSetting"，微信唯一可靠方式）
   //   4. 返回后重新 _tryInit
   async onTapRequestPerm() {
     this.log('=== 手动申请权限 ===', 'info');
@@ -152,7 +173,7 @@ Page({
       { key: 'scope.bluetooth',    label: '蓝牙' },
       { key: 'scope.userLocation', label: '定位（Android 扫描必须）' }
     ];
-    let needOpenSetting = false;
+    let anyFail = false;
     for (const s of scopes) {
       try {
         await new Promise((res, rej) => wx.authorize({ scope: s.key, success: res, fail: rej }));
@@ -160,32 +181,27 @@ Page({
       } catch (e) {
         const msg = (e && e.errMsg) || '';
         this.log(s.label + ' 授权失败: ' + msg, 'warn');
-        // errMsg 包含 auth deny 表示用户拒绝过，后续必须走 openSetting
-        if (msg.indexOf('deny') !== -1 || msg.indexOf('disable') !== -1) {
-          needOpenSetting = true;
-        }
+        anyFail = true;
       }
     }
 
-    if (needOpenSetting) {
-      const ok = await new Promise((res) => {
-        wx.showModal({
-          title: '权限被拒绝',
-          content: '请在设置页手动打开「蓝牙」和「位置信息」权限。',
-          confirmText: '去设置',
-          cancelText: '取消',
-          success: (r) => res(r.confirm)
-        });
-      });
-      if (ok) {
-        const r = await new Promise((res) => wx.openSetting({ success: res, fail: () => res(null) }));
-        if (r && r.authSetting) {
-          this.log('设置页返回: bluetooth=' + r.authSetting['scope.bluetooth'] + ' userLocation=' + r.authSetting['scope.userLocation'], 'info');
-        }
-      }
+    if (anyFail) {
+      // 显示「去设置」按钮（open-type="openSetting"），不直接调 wx.openSetting
+      // 因为 wx.openSetting 在手势上下文丢失时会静默失败
+      this.log('部分权限授权失败，请点击下方「去设置」按钮手动开启', 'warn');
+      this.setData({ showOpenSetting: true });
+    } else {
+      // 全部成功，直接重新初始化
+      this._tryInit();
     }
+  },
 
-    // 手动重新初始化 BLE
+  // 从设置页返回后触发（<button open-type="openSetting"> 的 bindopensetting 事件）
+  onSettingReturn(e) {
+    const auth = (e.detail && e.detail.authSetting) || {};
+    this.log('设置页返回: bluetooth=' + auth['scope.bluetooth'] + ' userLocation=' + auth['scope.userLocation'], 'info');
+    this.setData({ showOpenSetting: false });
+    // 重新初始化 BLE
     this._tryInit();
   },
 

@@ -180,7 +180,10 @@ class BLEClient {
       try {
         await wxPromise(wx.authorize, { scope: 'scope.userLocation' });
       } catch (e) {
-        throw { errCode: 10001, errMsg: '定位权限未授权，Android 扫描 BLE 需要定位权限', needOpenSetting: true };
+        // 定位授权失败不阻断蓝牙初始化，仅警告
+        // 原因：requiredPrivateInfos 未配置时 wx.authorize 会静默失败
+        // Android 扫描 BLE 会受影响，但连接/发送仍可正常使用
+        if (this.debugLog) this.debugLog('⚠️ 定位权限未授权（Android 扫描可能受影响）: ' + (e && e.errMsg));
       }
     }
   }

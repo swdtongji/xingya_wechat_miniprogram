@@ -17,7 +17,17 @@ page {
 }
 .btn-primary { background: #4a7cff; border-color: #4a7cff; }
 .btn-danger  { background: #ff4a7c; border-color: #ff4a7c; }
+.btn-warn    { background: #ff8c00; border-color: #ff8c00; }
 .btn[disabled] { opacity: 0.4; }
+
+/* open-type="openSetting" 按钮重置默认样式 */
+.open-setting-btn {
+  margin: 0;
+  line-height: normal;
+}
+.open-setting-btn::after {
+  border: none;
+}
 
 .card {
   background: #1a1a2e;

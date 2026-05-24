@@ -11,6 +11,10 @@
   },
   "style": "v2",
   "sitemapLocation": "sitemap.json",
+  "__usePrivacyCheck__": false,
+  "requiredPrivateInfos": [
+    "getLocation"
+  ],
   "permission": {
     "scope.bluetooth": {
       "desc": "用于连接 ESP32 设备并发送文本"

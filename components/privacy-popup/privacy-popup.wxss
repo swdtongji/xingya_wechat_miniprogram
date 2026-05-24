@@ -1,0 +1,94 @@
+/* components/privacy-popup/privacy-popup.wxss */
+
+.privacy-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.privacy-dialog {
+  width: 85%;
+  max-width: 620rpx;
+  background: #1e1e32;
+  border-radius: 24rpx;
+  padding: 40rpx 36rpx 32rpx;
+  box-shadow: 0 8rpx 40rpx rgba(0,0,0,0.4);
+}
+
+.privacy-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #e8e8f0;
+  text-align: center;
+  margin-bottom: 28rpx;
+}
+
+.privacy-body {
+  font-size: 28rpx;
+  color: #b0b0cc;
+  line-height: 1.7;
+  margin-bottom: 36rpx;
+}
+
+.privacy-link {
+  color: #6ea8fe;
+  display: inline;
+}
+
+.privacy-list {
+  margin: 20rpx 0;
+}
+
+.privacy-item {
+  margin: 8rpx 0;
+  font-size: 26rpx;
+  color: #a0a0c0;
+}
+
+.privacy-note {
+  font-size: 24rpx;
+  color: #808099;
+  margin-top: 16rpx;
+  display: block;
+}
+
+.privacy-btns {
+  display: flex;
+  gap: 20rpx;
+}
+
+.privacy-btn {
+  flex: 1;
+  height: 80rpx;
+  line-height: 80rpx;
+  text-align: center;
+  border-radius: 16rpx;
+  font-size: 30rpx;
+  font-weight: 500;
+}
+
+.privacy-btn-disagree {
+  background: #2a2a42;
+  color: #8888aa;
+  border: 1px solid #3a3a55;
+}
+
+.privacy-btn-agree {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  border: none;
+  /* 覆盖 button 默认样式 */
+  margin: 0;
+  padding: 0;
+}
+
+.privacy-btn-agree::after {
+  border: none;
+}

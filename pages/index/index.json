@@ -1,4 +1,6 @@
 {
-  "usingComponents": {},
+  "usingComponents": {
+    "privacy-popup": "/components/privacy-popup/privacy-popup"
+  },
   "navigationBarTitleText": "星芽 BLE 输入"
 }

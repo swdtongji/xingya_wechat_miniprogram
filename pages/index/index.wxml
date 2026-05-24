@@ -1,4 +1,8 @@
 <!-- pages/index/index.wxml -->
+
+<!-- 隐私协议弹窗 -->
+<privacy-popup show="{{showPrivacy}}" bind:agree="onPrivacyAgree"></privacy-popup>
+
 <view class="page">
 
   <!-- 状态条 -->
@@ -58,6 +62,13 @@
 
       <view class="row">
         <view class="btn flex1" bindtap="onTapRequestPerm">申请权限 / 重试初始化</view>
+      </view>
+
+      <!-- 授权失败后显示的「去设置」按钮，open-type="openSetting" 确保手势上下文不丢失 -->
+      <view class="row" wx:if="{{showOpenSetting}}">
+        <button class="btn btn-warn flex1 open-setting-btn" open-type="openSetting" bindopensetting="onSettingReturn">
+          去设置页手动开启权限
+        </button>
       </view>
     </view>
   </block>

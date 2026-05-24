@@ -1,0 +1,19 @@
+<!-- components/privacy-popup/privacy-popup.wxml -->
+<view class="privacy-mask" wx:if="{{show}}" catchtap="stopPropagation">
+  <view class="privacy-dialog" catchtap="stopPropagation">
+    <view class="privacy-title">隐私保护指引</view>
+    <view class="privacy-body">
+      <text>在使用「星芽 BLE 输入」前，请阅读并同意</text>
+      <text class="privacy-link" bindtap="onViewPolicy">《隐私保护指引》</text>
+      <view class="privacy-list">
+        <view class="privacy-item">· 蓝牙权限：用于连接 ESP32 设备并发送文本</view>
+        <view class="privacy-item">· 定位权限：Android 扫描 BLE 设备需要（系统要求）</view>
+      </view>
+      <text class="privacy-note">本小程序不收集、存储或上传任何个人信息。</text>
+    </view>
+    <view class="privacy-btns">
+      <view class="privacy-btn privacy-btn-disagree" bindtap="onAgree">拒绝</view>
+      <button class="privacy-btn privacy-btn-agree" id="agree-btn" bindtap="onAgree" open-type="agreePrivacyAuthorization">同意</button>
+    </view>
+  </view>
+</view>
